@@ -1,122 +1,189 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+const BOARD_SIZE = 8;
+const boardElement = document.getElementById("board");
+const pickerElement = document.getElementById("block-picker");
+const scoreElement = document.getElementById("score");
+
+let grid = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+let score = 0;
+let currentPieces = [];
+
+// সম্ভাব্য বিভিন্ন ব্লকের শেপ (Shapes)
+const SHAPES = [
+    [[1, 1], [1, 1]], // ২x২ স্কয়ার
+    [[1, 1, 1]],      // ৩ লাইনের সোজা ব্লক
+    [[1], [1], [1]],  // ৩ লাইনের লম্বালম্বি ব্লক
+    [[1, 0], [1, 1]], // L-শেপ
+    [[1]]             // সিঙ্গেল ডট
+];
+
+function initGame() {
+    createBoard();
+    generateNewPieces();
 }
 
-body {
-    background-color: #1a1a2e;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+// বোর্ড গ্রিড তৈরি
+function createBoard() {
+    boardElement.innerHTML = "";
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            boardElement.appendChild(cell);
+        }
+    }
 }
 
-.game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
+// ৩টি নতুন শেপ তৈরি করা
+function generateNewPieces() {
+    pickerElement.innerHTML = "";
+    currentPieces = [];
+
+    for (let i = 0; i < 3; i++) {
+        const randomShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        currentPieces.push(randomShape);
+        renderPiece(randomShape, i);
+    }
 }
 
-.header {
-    text-align: center;
+function renderPiece(shape, index) {
+    const pieceEl = document.createElement("div");
+    pieceEl.classList.add("piece");
+    pieceEl.style.gridTemplateColumns = `repeat(${shape[0].length}, 25px)`;
+
+    shape.forEach((row) => {
+        row.forEach((val) => {
+            const cell = document.createElement("div");
+            cell.classList.add("piece-cell");
+            if (!val) cell.classList.add("empty");
+            pieceEl.appendChild(cell);
+        });
+    });
+
+    // ক্লিক করে বোর্ডে ব্লক বসানো (ক্লিক প্লেসমেন্ট লজিক)
+    pieceEl.addEventListener("click", () => placePieceOnBoard(shape, index, pieceEl));
+    pickerElement.appendChild(pieceEl);
 }
 
-.score-board {
-    font-size: 24px;
-    margin-top: 10px;
-    color: #e94560;
+function placePieceOnBoard(shape, index, pieceEl) {
+    // খালি জায়গা খুঁজে বের করে প্লেস করা
+    for (let r = 0; r <= BOARD_SIZE - shape.length; r++) {
+        for (let c = 0; c <= BOARD_SIZE - shape[0].length; c++) {
+            if (canPlace(shape, r, c)) {
+                drawShape(shape, r, c);
+                pieceEl.remove();
+                addScore(countBlocks(shape));
+                checkLines();
+                
+                // ৩টি ব্লকই ব্যবহার করা হলে নতুন ৩টি আবার আসবে
+                if (pickerElement.children.length === 0) {
+                    generateNewPieces();
+                }
+                return;
+            }
+        }
+    }
+    alert("এই ব্লকটি বসানোর মতো পর্যাপ্ত জায়গা খালি নেই!");
 }
 
-/* গেম গ্রিড বোর্ড */
-.board {
-    display: grid;
-    grid-template-columns: repeat(8, 40px);
-    grid-template-rows: repeat(8, 40px);
-    gap: 4px;
-    background-color: #16213e;
-    padding: 8px;
-    border-radius: 8px;
+function canPlace(shape, startR, startC) {
+    for (let r = 0; r < shape.length; r++) {
+        for (let c = 0; c < shape[0].length; c++) {
+            if (shape[r][c] && grid[startR + r][startC + c] === 1) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
-.cell {
-    width: 40px;
-    height: 40px;
-    background-color: #0f3460;
-    border-radius: 4px;
-    transition: background-color 0.2s, transform 0.2s, opacity 0.3s;
+function drawShape(shape, startR, startC) {
+    for (let r = 0; r < shape.length; r++) {
+        for (let c = 0; c < shape[0].length; c++) {
+            if (shape[r][c]) {
+                grid[startR + r][startC + c] = 1;
+                const cellIndex = (startR + r) * BOARD_SIZE + (startC + c);
+                boardElement.children[cellIndex].classList.add("filled");
+            }
+        }
+    }
 }
 
-.cell.filled {
-    background-color: #e94560;
+function countBlocks(shape) {
+    return shape.flat().filter(v => v === 1).length;
 }
 
-/* লাইন ভ্যানিশ হওয়ার অ্যানিমেশন */
-.cell.clear-anim {
-    transform: scale(0);
-    opacity: 0;
+function addScore(pts) {
+    score += pts * 10;
+    scoreElement.innerText = score;
 }
 
-/* জেনারেট হওয়া ব্লক চয়ন করার জায়গা */
-.block-picker {
-    display: flex;
-    gap: 20px;
-    min-height: 120px;
-    align-items: center;
+// পুরো রো বা কলাম পূর্ণ হলে ভ্যানিশ করা (Line Clear)
+function checkLines() {
+    let rowsToClear = [];
+    let colsToClear = [];
+
+    // রো চেক
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        if (grid[r].every(val => val === 1)) rowsToClear.push(r);
+    }
+
+    // কলাম চেক
+    for (let c = 0; c < BOARD_SIZE; c++) {
+        let full = true;
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            if (grid[r][c] === 0) { full = false; break; }
+        }
+        if (full) colsToClear.push(c);
+    }
+
+    // রো ও কলাম মুছে ফেলা এবং অ্যানিমেশন দেওয়া
+    rowsToClear.forEach(r => {
+        for (let c = 0; c < BOARD_SIZE; c++) clearCell(r, c);
+    });
+
+    colsToClear.forEach(c => {
+        for (let r = 0; r < BOARD_SIZE; r++) clearCell(r, c);
+    });
 }
 
-.piece {
-    display: grid;
-    gap: 2px;
-    cursor: grab;
-    padding: 5px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
+function clearCell(r, c) {
+    grid[r][c] = 0;
+    const cell = boardElement.children[r * BOARD_SIZE + c];
+    cell.classList.add("clear-anim");
+    setTimeout(() => {
+        cell.classList.remove("filled", "clear-anim");
+    }, 300);
 }
 
-.piece-cell {
-    width: 25px;
-    height: 25px;
-    background-color: #e94560;
-    border-radius: 3px;
+// বিজ্ঞাপন দেখে গেম কন্টিনিউ করার অপশন
+function watchAdToContinue() {
+    alert("বিজ্ঞাপন দেখা হচ্ছে...");
+    setTimeout(() => {
+        document.getElementById("game-over-modal").classList.add("hidden");
+        // কিছু ব্লক খালি করে গেম চালুর সুযোগ দেওয়া
+        grid[3].fill(0);
+        grid[4].fill(0);
+        createBoard();
+        // আগের গ্রিড ডাটা অনুযায়ী রিড্র করা
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                if (grid[r][c] === 1) {
+                    boardElement.children[r * BOARD_SIZE + c].classList.add("filled");
+                }
+            }
+        }
+        generateNewPieces();
+    }, 1000);
 }
 
-.piece-cell.empty {
-    background-color: transparent;
+function restartGame() {
+    grid = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+    score = 0;
+    scoreElement.innerText = score;
+    document.getElementById("game-over-modal").classList.add("hidden");
+    initGame();
 }
 
-/* পপআপ মোডাল */
-.modal {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal.hidden {
-    display: none;
-}
-
-.modal-content {
-    background: #16213e;
-    padding: 30px;
-    border-radius: 12px;
-    text-align: center;
-}
-
-.modal-content button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    font-size: 16px;
-    background: #e94560;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
+initGame();
