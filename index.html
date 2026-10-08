@@ -1,1 +1,35 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Puzzle Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Block Puzzle</h1>
+            <div class="score-board">স্কোর: <span id="score">0</span></div>
+        </div>
 
+        <!-- মূল গেম বোর্ড (৮x৮ গ্রিড) -->
+        <div id="board" class="board"></div>
+
+        <!-- নিচে ৩টি ব্লকের জায়গা -->
+        <div id="block-picker" class="block-picker"></div>
+
+        <!-- গেম ওভার পপআপ -->
+        <div id="game-over-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>গেম ওভার!</h2>
+                <p>আপনার চূড়ান্ত স্কোর: <span id="final-score">0</span></p>
+                <button id="watch-ad-btn" onclick="watchAdToContinue()">বিজ্ঞাপন দেখে খেলা চালিয়ে যান</button>
+                <button onclick="restartGame()">নতুন গেম শুরু করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
