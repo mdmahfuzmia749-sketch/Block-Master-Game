@@ -1,3 +1,26 @@
+:root {
+    --bg-color: #1a1a2e;
+    --text-color: #fff;
+    --board-bg: #16213e;
+    --cell-bg: #0f3460;
+    --top-score-color: #ffeb3b; /* হলুদ কালার */
+    --score-color: #e94560;
+}
+
+body.dark-theme {
+    --bg-color: #121212;
+    --text-color: #f1f1f1;
+    --board-bg: #1e1e1e;
+    --cell-bg: #2d2d2d;
+}
+
+body.neon-theme {
+    --bg-color: #0d0221;
+    --text-color: #00f5d4;
+    --board-bg: #240046;
+    --cell-bg: #10002b;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -5,118 +28,179 @@
 }
 
 body {
-    background-color: #1a1a2e;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-}
-
-.game-container {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Arial Black', Arial, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    transition: all 0.3s ease;
 }
 
-.header {
+/* হেডার কন্টেইনার */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 320px;
+    margin-bottom: 10px;
+}
+
+/* বাম সাইডে টপ স্কোর (হলুদ ও মোটা) */
+.top-score-container {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--top-score-color);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.settings-btn {
+    background: none;
+    border: none;
+    font-size: 26px;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+/* বোর্ডের ঠিক উপরে মাঝখানে শুধু বর্তমান স্কোরের সংখ্যা */
+.current-score-container {
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--score-color);
+    margin-bottom: 10px;
     text-align: center;
+    height: 45px;
 }
 
-.score-board {
-    font-size: 24px;
-    margin-top: 10px;
-    color: #e94560;
-}
-
-/* গেম গ্রিড বোর্ড */
-.board {
+/* পাজেল গেম গ্রিড বোর্ড */
+#game-board {
+    width: 320px;
+    height: 320px;
     display: grid;
-    grid-template-columns: repeat(8, 40px);
-    grid-template-rows: repeat(8, 40px);
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     gap: 4px;
-    background-color: #16213e;
+    background-color: var(--board-bg);
     padding: 8px;
     border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.4);
 }
 
 .cell {
-    width: 40px;
-    height: 40px;
-    background-color: #0f3460;
+    background-color: var(--cell-bg);
     border-radius: 4px;
     transition: background-color 0.2s, transform 0.2s, opacity 0.3s;
 }
 
 .cell.filled {
-    background-color: #e94560;
+    background-color: var(--score-color);
 }
 
-/* লাইন ভ্যানিশ হওয়ার অ্যানিমেশন */
+.cell.drag-over {
+    opacity: 0.6;
+    background-color: #ffffff44;
+}
+
 .cell.clear-anim {
     transform: scale(0);
     opacity: 0;
 }
 
-/* জেনারেট হওয়া ব্লক চয়ন করার জায়গা */
-.block-picker {
+/* ব্লক চয়ন করার পিকিং এরিয়া */
+#pieces-container {
     display: flex;
-    gap: 20px;
-    min-height: 120px;
+    justify-content: center;
     align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    min-height: 100px;
+    width: 320px;
 }
 
 .piece {
     display: grid;
     gap: 2px;
     cursor: grab;
-    padding: 5px;
+    padding: 6px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 6px;
 }
 
-.piece-cell {
+.piece:active {
+    cursor: grabbing;
+}
+
+.block {
     width: 25px;
     height: 25px;
-    background-color: #e94560;
     border-radius: 3px;
+    background-color: var(--score-color);
 }
 
-.piece-cell.empty {
-    background-color: transparent;
+.block.empty {
+    background-color: transparent !important;
 }
 
-/* পপআপ মোডাল */
+/* মোডাল ডিজাইন */
 .modal {
+    display: none;
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
+    background: rgba(0,0,0,0.85);
     justify-content: center;
     align-items: center;
+    z-index: 100;
 }
 
-.modal.hidden {
-    display: none;
+.modal.active {
+    display: flex;
 }
 
 .modal-content {
-    background: #16213e;
-    padding: 30px;
+    background: var(--board-bg);
+    padding: 25px;
     border-radius: 12px;
+    width: 280px;
     text-align: center;
+    color: var(--text-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
-.modal-content button {
-    margin-top: 15px;
-    padding: 10px 20px;
+.modal-content h2 {
+    margin-bottom: 15px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    font-weight: normal;
+    font-size: 14px;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
     font-size: 16px;
-    background: #e94560;
+    font-weight: bold;
+    background: var(--score-color);
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secondary {
+    background: #ff9800;
+}
+
+.btn:hover {
+    filter: brightness(1.1);
 }
