@@ -13,12 +13,6 @@ let topScore = localStorage.getItem('block_master_top_score') ? parseInt(localSt
 topScoreElem.textContent = topScore;
 
 const BLOCK_COLORS = ['#f44336', '#2196f3', '#ffeb3b', '#4caf50', '#9c27b0', '#ff9800'];
-const SHAPES = [
-    [[1, 1], [1, 1]], // ২x২
-    [[1, 1, 1]],      // ৩ সাইজ সোজা
-    [[1], [1], [1]],  // ৩ সাইজ লম্বালম্বি
-    [[1, 0], [1, 1]], // L-শেপ
-    [[1]]             // ১ সাইজ ডট
 const NEW_SHAPES = [
   // ১. একসাথে ৯ পিসের ব্লক (3x3 স্কয়ার)
   [
@@ -40,22 +34,22 @@ const NEW_SHAPES = [
     [1, 1]
   ],
 
-  // ৪. 1 পিসের ব্লক - এক সারিতে লম্বা (1x1)
+  // ৪. ৬ পিসের ব্লক - এক সারিতে লম্বা (1x6)
   [
-    [1, 1]
+    [1, 1, 1, 1, 1, 1]
   ],
 
-  // ৫. 4 পিসের ব্লক - এক কলামে লম্বা (4x1)
+  // ৫. ৬ পিসের ব্লক - এক কলামে লম্বা (6x1)
   [
     [1],
     [1],
     [1],
     [1],
-    
+    [1],
+    [1]
   ]
 ];
-
-let isSoundOn = true;
+et isSoundOn = true;
 let isVibrationOn = true;
 let audioCtx = null;
 let bgmInterval = null;
