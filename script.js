@@ -10,252 +10,38 @@ let grid = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
 let currentScore = 0;
 let topScore = localStorage.getItem('block_master_top_score') ? parseInt(localStorage.getItem('block_master_top_score')) : 0;
 
-topScoreElem.textContent = topScore;
+if (topScoreElem) topScoreElem.textContent = topScore;
 
 const BLOCK_COLORS = ['#f44336', '#2196f3', '#ffeb3b', '#4caf50', '#9c27b0', '#ff9800', '#00bcd4', '#e91e63', '#8bc34a'];
 
-// অনেক ধরনের আকর্ষণীয় ছোট, মাঝারি ও বড় শেপ বা ব্লকসমূহ
+// বিভিন্ন আকৃতির ব্লক বা শেপসমূহ
 const SHAPES = [
-  // --- ১. সিঙ্গেল ও ছোট ব্লক ---
   [[1]],
   [[1, 1]],
-  [
-    [1],
-    [1]
-  ],
+  [[1], [1]],
   [[1, 1, 1]],
-  [
-    [1],
-    [1],
-    [1]
-  ],
-
-  // --- ২. L এবং J শেপ ---
-  [
-    [1, 0],
-    [1, 1]
-  ],
-  [
-    [0, 1],
-    [1, 1]
-  ],
-  [
-    [1, 1],
-    [1, 0]
-  ],
-  [
-    [1, 1],
-    [0, 1]
-  ],
-  [
-    [1, 0, 0],
-    [1, 1, 1]
-  ],
-  [
-    [0, 0, 1],
-    [1, 1, 1]
-  ],
-
-  // --- ৩. স্ট্যান্ডার্ড ৪-পিস ব্লক ---
-  [
-    [1, 1],
-    [1, 1]
-  ],
+  [[1], [1], [1]],
+  [[1, 0], [1, 1]],
+  [[0, 1], [1, 1]],
+  [[1, 1], [1, 0]],
+  [[1, 1], [0, 1]],
+  [[1, 1], [1, 1]],
   [[1, 1, 1, 1]],
-  [
-    [1],
-    [1],
-    [1],
-    [1]
-  ],
-  [
-    [1, 1, 1],
-    [0, 1, 0]
-  ],
-  [
-    [1, 1, 0],
-    [0, 1, 1]
-  ],
-  [
-    [0, 1, 1],
-    [1, 1, 0]
-  ],
-
-  // --- ৪. ৫-পিস ও ৬-পিস বড় ব্লক ---
-  [[1, 1, 1, 1, 1]],
-  [
-    [1],
-    [1],
-    [1],
-    [1],
-    [1]
-  ],
-  [
-    [0, 1, 0],
-    [1, 1, 1],
-    [0, 1, 0]
-  ],
-  // ৬ পিস - আড়াআড়ি (2x3)
-  [
-    [1, 1, 1],
-    [1, 1, 1]
-  ],
-  // ৬ পিস - খাড়া (3x2)
-  [
-    [1, 1],
-    [1, 1],
-    [1, 1]
-  ],
-  // ৬ পিস - লম্বা লাইন (1x6 এবং 6x1)
-  [[1, 1, 1, 1, 1, 1]],
-  [
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1]
-  ],
-
-  // --- ৫. ৮-পিস ও ৯-পিস বিশাল ব্লক ---
-  // ৮ পিস (2x4)
-  [
-    [1, 1, 1, 1],
-    [1, 1, 1, 1]
-  ],
-  // ৮ পিস (4x2)
-  [
-    [1, 1],
-    [1, 1],
-    [1, 1],
-    [1, 1]
-  ],
-  // ৯ পিস - সম্পূর্ণ স্কয়ার (3x3)
-  [
-    [1, 1, 1],
-    [1, 1, 1],
-    [1, 1, 1]
-  ],
-  // ৯ পিস - ইউ শেপ / ফাঁকা বক্স
-  [
-    [1, 1, 1],
-    [1, 0, 1],
-    [1, 1, 1]
-  ]
+  [[1], [1], [1], [1]],
+  [[1, 1, 1], [0, 1, 0]],
+  [[1, 1, 0], [0, 1, 1]],
+  [[0, 1, 1], [1, 1, 0]],
+  [[1, 1, 1], [1, 1, 1]],
+  [[1, 1, 1, 1], [1, 1, 1, 1]]
 ];
 
 let isSoundOn = true;
 let isVibrationOn = true;
 let audioCtx = null;
-let bgmInterval = null;
-
-// সেটিংস মোডাল কন্ট্রোল
-const settingsModal = document.getElementById('settings-modal');
-if (document.getElementById('open-settings')) {
-    document.getElementById('open-settings').onclick = () => settingsModal.classList.add('active');
-}
-if (document.getElementById('close-settings')) {
-    document.getElementById('close-settings').onclick = () => settingsModal.classList.remove('active');
-}
-
-if (document.getElementById('sound-toggle')) {
-    document.getElementById('sound-toggle').onchange = (e) => {
-        isSoundOn = e.target.checked;
-        if (isSoundOn) startBGM(); else stopBGM();
-    };
-}
-if (document.getElementById('vibration-toggle')) {
-    document.getElementById('vibration-toggle').onchange = (e) => isVibrationOn = e.target.checked;
-}
-if (document.getElementById('theme-select')) {
-    document.getElementById('theme-select').onchange = (e) => {
-        document.body.className = '';
-        if (e.target.value !== 'classic') document.body.classList.add(`${e.target.value}-theme`);
-    };
-}
-
-// অডিও এবং সাউন্ড ইফেক্টস
-function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-
-function startBGM() {
-    if (bgmInterval || !isSoundOn) return;
-    const notes = [261.63, 293.66, 329.63, 349.23, 392.00];
-    let step = 0;
-    bgmInterval = setInterval(() => {
-        if (!isSoundOn || !audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
-        step++;
-    }, 500);
-}
-
-function stopBGM() {
-    if (bgmInterval) { clearInterval(bgmInterval); bgmInterval = null; }
-}
-
-function playCrashSound() {
-    if (!isSoundOn || !audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.2);
-}
-
-function playGameOverSound() {
-    if (!isSoundOn || !audioCtx) return;
-    stopBGM();
-
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.8);
-
-    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.8);
-}
-
-function triggerVibration() {
-    if (isVibrationOn && navigator.vibrate) navigator.vibrate(100);
-}
-
-function updateScore(points) {
-    currentScore += points;
-    currentScoreElem.textContent = currentScore;
-    if (currentScore > topScore) {
-        topScore = currentScore;
-        topScoreElem.textContent = topScore;
-        localStorage.setItem('block_master_top_score', topScore);
-    }
-}
 
 // গ্রিড বোর্ড তৈরি
 function createBoard() {
+    if (!board) return;
     board.innerHTML = '';
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
@@ -280,18 +66,18 @@ let draggedPieceShape = null;
 let draggedPieceColor = null;
 let draggedPieceElement = null;
 
-// ৩টি নতুন শেপ পিস তৈরি
+// পিস বা ব্লক তৈরি
 function createPieces() {
+    if (!piecesContainer) return;
     piecesContainer.innerHTML = '';
     for (let i = 0; i < 3; i++) {
         const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
         const piece = document.createElement('div');
         piece.classList.add('piece');
         piece.setAttribute('draggable', 'true');
-        piece.style.gridTemplateColumns = `repeat(${shape[0].length}, 25px)`;
+        piece.style.gridTemplateColumns = `repeat(${shape[0].length}, 20px)`;
 
         piece.shapeData = shape;
-
         const randomColor = BLOCK_COLORS[Math.floor(Math.random() * BLOCK_COLORS.length)];
 
         shape.forEach(row => {
@@ -305,8 +91,6 @@ function createPieces() {
         });
 
         piece.addEventListener('dragstart', (e) => {
-            initAudio();
-            startBGM();
             draggedPieceShape = shape;
             draggedPieceColor = randomColor;
             draggedPieceElement = piece;
@@ -314,10 +98,8 @@ function createPieces() {
         });
 
         piece.addEventListener('click', () => handlePieceClick(shape, randomColor, piece));
-
         piecesContainer.appendChild(piece);
     }
-
     checkGameOver();
 }
 
@@ -332,7 +114,7 @@ function handleDrop(e) {
 
     if (canPlace(draggedPieceShape, startRow, startCol)) {
         placePiece(draggedPieceShape, draggedPieceColor, startRow, startCol);
-        draggedPieceElement.remove();
+        if (draggedPieceElement) draggedPieceElement.remove();
         checkAndClearLines();
         if (piecesContainer.children.length === 0) createPieces();
         else checkGameOver();
@@ -407,8 +189,6 @@ function checkAndClearLines() {
 
     let clearedLines = rowsToClear.length + colsToClear.length;
     if (clearedLines > 0) {
-        playCrashSound();
-        triggerVibration();
         updateScore(clearedLines * 100);
     }
 
@@ -425,11 +205,18 @@ function clearCell(r, c) {
     grid[r][c] = 0;
     const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
     if (cell) {
-        cell.classList.add('clear-anim');
-        setTimeout(() => {
-            cell.classList.remove('filled', 'clear-anim');
-            cell.style.backgroundColor = '';
-        }, 300);
+        cell.classList.remove('filled');
+        cell.style.backgroundColor = '';
+    }
+}
+
+function updateScore(points) {
+    currentScore += points;
+    if (currentScoreElem) currentScoreElem.textContent = currentScore;
+    if (currentScore > topScore) {
+        topScore = currentScore;
+        if (topScoreElem) topScoreElem.textContent = topScore;
+        localStorage.setItem('block_master_top_score', topScore);
     }
 }
 
@@ -438,7 +225,6 @@ function checkGameOver() {
     if (remainingPieces.length === 0) return;
 
     let canMove = false;
-
     for (let pieceEl of remainingPieces) {
         const shape = pieceEl.shapeData;
         if (!shape) continue;
@@ -456,27 +242,9 @@ function checkGameOver() {
     }
 
     if (!canMove) {
-        setTimeout(() => {
-            playGameOverSound();
-            if (finalScoreElem) finalScoreElem.textContent = currentScore;
-            if (gameOverModal) gameOverModal.classList.add('active');
-        }, 500);
+        if (finalScoreElem) finalScoreElem.textContent = currentScore;
+        if (gameOverModal) gameOverModal.classList.add('active');
     }
-}
-
-const watchAdBtn = document.getElementById('watch-ad-btn');
-if (watchAdBtn) {
-    watchAdBtn.onclick = () => {
-        alert(navigator.onLine ? "ভিডিও বিজ্ঞাপন প্লে হচ্ছে..." : "অফলাইন মোড: ফ্রি রিভাইভ সক্রিয় করা হয়েছে!");
-        setTimeout(() => {
-            if (gameOverModal) gameOverModal.classList.remove('active');
-            for (let r = 3; r <= 5; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) clearCell(r, c);
-            }
-            createPieces();
-            if (isSoundOn) startBGM();
-        }, 1200);
-    };
 }
 
 const restartBtn = document.getElementById('restart-btn');
@@ -487,13 +255,12 @@ if (restartBtn) {
 function restartGame() {
     grid = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
     currentScore = 0;
-    currentScoreElem.textContent = '0';
+    if (currentScoreElem) currentScoreElem.textContent = '0';
     if (gameOverModal) gameOverModal.classList.remove('active');
     createBoard();
     createPieces();
-    if (isSoundOn) startBGM();
 }
 
-document.body.addEventListener('click', () => { initAudio(); startBGM(); }, { once: true });
-
-restartGame();
+// গেম শুরু করা
+createBoard();
+createPieces();
