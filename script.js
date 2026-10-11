@@ -12,34 +12,102 @@ let topScore = localStorage.getItem('block_master_top_score') ? parseInt(localSt
 
 topScoreElem.textContent = topScore;
 
-const BLOCK_COLORS = ['#f44336', '#2196f3', '#ffeb3b', '#4caf50', '#9c27b0', '#ff9800'];
-const NEW_SHAPES = [
-  // ১. একসাথে ৯ পিসের ব্লক (3x3 স্কয়ার)
+const BLOCK_COLORS = ['#f44336', '#2196f3', '#ffeb3b', '#4caf50', '#9c27b0', '#ff9800', '#00bcd4', '#e91e63', '#8bc34a'];
+
+// অনেক ধরনের আকর্ষণীয় ছোট, মাঝারি ও বড় শেপ বা ব্লকসমূহ
+const SHAPES = [
+  // --- ১. সিঙ্গেল ও ছোট ব্লক ---
+  [[1]],
+  [[1, 1]],
   [
-    [1, 1, 1],
-    [1, 1, 1],
+    [1],
+    [1]
+  ],
+  [[1, 1, 1]],
+  [
+    [1],
+    [1],
+    [1]
+  ],
+
+  // --- ২. L এবং J শেপ ---
+  [
+    [1, 0],
+    [1, 1]
+  ],
+  [
+    [0, 1],
+    [1, 1]
+  ],
+  [
+    [1, 1],
+    [1, 0]
+  ],
+  [
+    [1, 1],
+    [0, 1]
+  ],
+  [
+    [1, 0, 0],
+    [1, 1, 1]
+  ],
+  [
+    [0, 0, 1],
     [1, 1, 1]
   ],
 
-  // ২. ৬ পিসের ব্লক - চওড়া/আড়াআড়ি (2x3)
+  // --- ৩. স্ট্যান্ডার্ড ৪-পিস ব্লক ---
+  [
+    [1, 1],
+    [1, 1]
+  ],
+  [[1, 1, 1, 1]],
+  [
+    [1],
+    [1],
+    [1],
+    [1]
+  ],
+  [
+    [1, 1, 1],
+    [0, 1, 0]
+  ],
+  [
+    [1, 1, 0],
+    [0, 1, 1]
+  ],
+  [
+    [0, 1, 1],
+    [1, 1, 0]
+  ],
+
+  // --- ৪. ৫-পিস ও ৬-পিস বড় ব্লক ---
+  [[1, 1, 1, 1, 1]],
+  [
+    [1],
+    [1],
+    [1],
+    [1],
+    [1]
+  ],
+  [
+    [0, 1, 0],
+    [1, 1, 1],
+    [0, 1, 0]
+  ],
+  // ৬ পিস - আড়াআড়ি (2x3)
   [
     [1, 1, 1],
     [1, 1, 1]
   ],
-
-  // ৩. ৬ পিসের ব্লক - খাড়া/লম্বালম্বি (3x2)
+  // ৬ পিস - খাড়া (3x2)
   [
     [1, 1],
     [1, 1],
     [1, 1]
   ],
-
-  // ৪. ৬ পিসের ব্লক - এক সারিতে লম্বা (1x6)
-  [
-    [1, 1, 1, 1, 1, 1]
-  ],
-
-  // ৫. ৬ পিসের ব্লক - এক কলামে লম্বা (6x1)
+  // ৬ পিস - লম্বা লাইন (1x6 এবং 6x1)
+  [[1, 1, 1, 1, 1, 1]],
   [
     [1],
     [1],
@@ -47,9 +115,36 @@ const NEW_SHAPES = [
     [1],
     [1],
     [1]
+  ],
+
+  // --- ৫. ৮-পিস ও ৯-পিস বিশাল ব্লক ---
+  // ৮ পিস (2x4)
+  [
+    [1, 1, 1, 1],
+    [1, 1, 1, 1]
+  ],
+  // ৮ পিস (4x2)
+  [
+    [1, 1],
+    [1, 1],
+    [1, 1],
+    [1, 1]
+  ],
+  // ৯ পিস - সম্পূর্ণ স্কয়ার (3x3)
+  [
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1]
+  ],
+  // ৯ পিস - ইউ শেপ / ফাঁকা বক্স
+  [
+    [1, 1, 1],
+    [1, 0, 1],
+    [1, 1, 1]
   ]
 ];
-et isSoundOn = true;
+
+let isSoundOn = true;
 let isVibrationOn = true;
 let audioCtx = null;
 let bgmInterval = null;
@@ -124,7 +219,6 @@ function playCrashSound() {
     osc.stop(audioCtx.currentTime + 0.2);
 }
 
-// অটোমেটিক গেম ওভার সাউন্ড
 function playGameOverSound() {
     if (!isSoundOn || !audioCtx) return;
     stopBGM();
@@ -170,7 +264,6 @@ function createBoard() {
             cell.dataset.row = r;
             cell.dataset.col = c;
             
-            // যদি আগে থেকে এই ঘরে ব্লক বসানো থাকে তা ধরে রাখা
             if (grid[r][c] === 1) {
                 cell.classList.add('filled');
             }
@@ -197,7 +290,6 @@ function createPieces() {
         piece.setAttribute('draggable', 'true');
         piece.style.gridTemplateColumns = `repeat(${shape[0].length}, 25px)`;
 
-        // শেপ ডাটা সেভ রাখা যাতে গেম ওভার সঠিকভাবে ড্রাইভ করা যায়
         piece.shapeData = shape;
 
         const randomColor = BLOCK_COLORS[Math.floor(Math.random() * BLOCK_COLORS.length)];
@@ -221,13 +313,11 @@ function createPieces() {
             e.dataTransfer.setData('text/plain', '');
         });
 
-        // মোবাইল ও ক্লিক প্লেসমেন্ট সাপোর্ট
         piece.addEventListener('click', () => handlePieceClick(shape, randomColor, piece));
 
         piecesContainer.appendChild(piece);
     }
 
-    // নতুন পিস আসার সাথে সাথে চালের সম্ভাবনা চেক করা
     checkGameOver();
 }
 
@@ -343,7 +433,6 @@ function clearCell(r, c) {
     }
 }
 
-// অটোমেটিক গেম ওভার ডিটেকশন
 function checkGameOver() {
     const remainingPieces = Array.from(piecesContainer.children);
     if (remainingPieces.length === 0) return;
@@ -366,7 +455,6 @@ function checkGameOver() {
         if (canMove) break;
     }
 
-    // বসানোর অপশন না থাকলে অটোমেটিক গেম ওভার
     if (!canMove) {
         setTimeout(() => {
             playGameOverSound();
@@ -376,15 +464,12 @@ function checkGameOver() {
     }
 }
 
-// ভিডিও অ্যাড দেখে পুনরায় গেম কন্টিনিউ বা রিভাইভ করা
 const watchAdBtn = document.getElementById('watch-ad-btn');
 if (watchAdBtn) {
     watchAdBtn.onclick = () => {
         alert(navigator.onLine ? "ভিডিও বিজ্ঞাপন প্লে হচ্ছে..." : "অফলাইন মোড: ফ্রি রিভাইভ সক্রিয় করা হয়েছে!");
         setTimeout(() => {
             if (gameOverModal) gameOverModal.classList.remove('active');
-            
-            // প্লেয়ারকে স্থান দেওয়ার জন্য বোর্ডের মাঝের ৩টি রো খালি করা
             for (let r = 3; r <= 5; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) clearCell(r, c);
             }
@@ -394,7 +479,6 @@ if (watchAdBtn) {
     };
 }
 
-// শুরু থেকে গেম রিস্টার্ট
 const restartBtn = document.getElementById('restart-btn');
 if (restartBtn) {
     restartBtn.onclick = restartGame;
